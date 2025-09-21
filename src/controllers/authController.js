@@ -1,9 +1,11 @@
 const User = require("../models/user");
+// import validator from './../../node_modules/validator/es/index';
 require("dotenv").config();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const generateTokens = require('../utils/generateTokens');
 // const jwt = require('jsonwebtoken');
+const validator = require('validator')
 require('dotenv').config();
 
 //middware
@@ -16,11 +18,9 @@ exports.checkAuth = async (req, res) => {
         const changeToken = token.replace("Bearer ", "");
 
         const decoded = await jwt.decode(changeToken, { secret: process.env.SECRET });
-
         if (!decoded) {
             return res.status(401).json('Unauthorization');
         }
-
         const user = await User.findOne({ _id: decoded.id })
 
         if (user.length === 0) {
@@ -34,7 +34,7 @@ exports.checkAuth = async (req, res) => {
                 _id: String(user._id),
                 name: user.username,
                 email: user.email,
-                avatar:user.avatar,
+                avatar: user.avatar,
                 status: 0
             }
         })
@@ -46,8 +46,11 @@ exports.checkAuth = async (req, res) => {
 exports.signUp = (req, res) => {
     const avatar = req.file ? req.file.filename : 'user';
     const { email, password, name: username } = req.body;
+    if (!validator.isEmail(email)) {
+        return res.status(200).json({ mes: "Not Email type", status: "info" });
+    }
     console.log(req.body, '------------------------')
-    
+
     if (!email || !password || !username) {
         return res.status(200).json({ mes: "Please fill all the fields", status: "warning" });
     }
